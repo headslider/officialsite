@@ -1,0 +1,13 @@
+{
+  "assets": [
+    "assets/image_01_2a36583baf.png",
+    "assets/image_02_49aef03729.png",
+    "assets/kirin_namacha_panda_sensei_highres.png",
+    "assets/lotte_ghana_brand_top.png",
+    "assets/lotte_ghana_fondue_christmas.png",
+    "assets/nissan_march_official.png",
+    "assets/nissan_pino_msn_shop.png",
+    "assets/nissan_tiana_ms_campaign_highres.png"
+  ],
+  "note": "Images are externalized from HTML. KIRIN Namacha and NISSAN TIANA images replaced with high-resolution user-supplied PNG files without resizing or recompression."
+}

@@ -1,0 +1,20 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Archives / backups
+*.zip
+*.bak
+*.tmp
+
+# Contact form runtime data
+contact_guard/*.log
+contact_guard/*.json
+contact_guard/*.lock
+contact_guard/ref_contact_reject.log
+contact_guard/rate_*.json
+contact_guard/dup_*.json
