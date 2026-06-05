@@ -19,101 +19,81 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare SSH key
-        env:
-          CORESERVER_SSH_KEY: ${{ secrets.CORESERVER_SSH_KEY }}
-          CORESERVER_SSH_HOST: ${{ secrets.CORESERVER_SSH_HOST }}
-          CORESERVER_SSH_PORT: ${{ secrets.CORESERVER_SSH_PORT }}
-        run: |
-          set -euo pipefail
-          test -n "${CORESERVER_SSH_KEY}" || { echo "CORESERVER_SSH_KEY is not set"; exit 1; }
-          test -n "${CORESERVER_SSH_HOST}" || { echo "CORESERVER_SSH_HOST is not set"; exit 1; }
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          printf '%s\n' "${CORESERVER_SSH_KEY}" > ~/.ssh/coreserver_deploy_key
-          chmod 600 ~/.ssh/coreserver_deploy_key
-          SSH_PORT="${CORESERVER_SSH_PORT:-22}"
-          touch ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
-          ssh-keyscan -T 10 -p "${SSH_PORT}" -H "${CORESERVER_SSH_HOST}" >> ~/.ssh/known_hosts 2>/dev/null || true
-
-      - name: Dry-run deploy
+      - name: Dry-run deploy by FTPS
         if: ${{ github.event.inputs.apply != 'true' }}
-        env:
-          CORESERVER_SSH_HOST: ${{ secrets.CORESERVER_SSH_HOST }}
-          CORESERVER_SSH_USER: ${{ secrets.CORESERVER_SSH_USER }}
-          CORESERVER_SSH_PORT: ${{ secrets.CORESERVER_SSH_PORT }}
-          CORESERVER_DEPLOY_PATH: ${{ secrets.CORESERVER_DEPLOY_PATH }}
-        run: |
-          set -euo pipefail
-          SSH_PORT="${CORESERVER_SSH_PORT:-22}"
-          DEPLOY_PATH="${CORESERVER_DEPLOY_PATH:-/virtual/ref/public_html/www.realemotionfactory.com/}"
-          rsync -azvn \
-            -e "ssh -i ~/.ssh/coreserver_deploy_key -p ${SSH_PORT} -o StrictHostKeyChecking=accept-new" \
-            --exclude='.git/' \
-            --exclude='.github/' \
-            --exclude='.gitignore' \
-            --exclude='.gitattributes' \
-            --exclude='DEPLOY.md' \
-            --exclude='README.md' \
-            --exclude='HANDOVER.md' \
-            --exclude='officialsite_handover.md' \
-            --exclude='_spam_protection_readme.txt' \
-            --exclude='_future_yakyu_yarouze_work_card_snippet.html' \
-            --exclude='_restore_yakyu_yarouze_memo.txt' \
-            --exclude='assets_manifest.json' \
-            --exclude='*.zip' \
-            --exclude='*.bak' \
-            --exclude='*.tmp' \
-            --exclude='desktop.ini' \
-            --exclude='contact_guard/*.log' \
-            --exclude='contact_guard/*.json' \
-            --exclude='contact_guard/*.lock' \
-            --exclude='baseball/' \
-            --exclude='baseball_test/' \
-            ./ "${CORESERVER_SSH_USER}@${CORESERVER_SSH_HOST}:${DEPLOY_PATH}"
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.CORESERVER_FTP_SERVER }}
+          username: ${{ secrets.CORESERVER_FTP_USERNAME }}
+          password: ${{ secrets.CORESERVER_FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: ./
+          server-dir: ${{ secrets.CORESERVER_FTP_SERVER_DIR }}
+          dry-run: true
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .github/**
+            DEPLOY.md
+            README.md
+            HANDOVER.md
+            officialsite_handover.md
+            _spam_protection_readme.txt
+            _future_yakyu_yarouze_work_card_snippet.html
+            _restore_yakyu_yarouze_memo.txt
+            assets_manifest.json
+            **/*.zip
+            **/*.bak
+            **/*.tmp
+            desktop.ini
+            contact_guard/*.log
+            contact_guard/*.json
+            contact_guard/*.lock
+            baseball/**
+            baseball_test/**
 
-      - name: Apply deploy
+      - name: Apply deploy by FTPS
         if: ${{ github.event.inputs.apply == 'true' }}
-        env:
-          CORESERVER_SSH_HOST: ${{ secrets.CORESERVER_SSH_HOST }}
-          CORESERVER_SSH_USER: ${{ secrets.CORESERVER_SSH_USER }}
-          CORESERVER_SSH_PORT: ${{ secrets.CORESERVER_SSH_PORT }}
-          CORESERVER_DEPLOY_PATH: ${{ secrets.CORESERVER_DEPLOY_PATH }}
-        run: |
-          set -euo pipefail
-          SSH_PORT="${CORESERVER_SSH_PORT:-22}"
-          DEPLOY_PATH="${CORESERVER_DEPLOY_PATH:-/virtual/ref/public_html/www.realemotionfactory.com/}"
-          rsync -azv \
-            -e "ssh -i ~/.ssh/coreserver_deploy_key -p ${SSH_PORT} -o StrictHostKeyChecking=accept-new" \
-            --exclude='.git/' \
-            --exclude='.github/' \
-            --exclude='.gitignore' \
-            --exclude='.gitattributes' \
-            --exclude='DEPLOY.md' \
-            --exclude='README.md' \
-            --exclude='HANDOVER.md' \
-            --exclude='officialsite_handover.md' \
-            --exclude='_spam_protection_readme.txt' \
-            --exclude='_future_yakyu_yarouze_work_card_snippet.html' \
-            --exclude='_restore_yakyu_yarouze_memo.txt' \
-            --exclude='assets_manifest.json' \
-            --exclude='*.zip' \
-            --exclude='*.bak' \
-            --exclude='*.tmp' \
-            --exclude='desktop.ini' \
-            --exclude='contact_guard/*.log' \
-            --exclude='contact_guard/*.json' \
-            --exclude='contact_guard/*.lock' \
-            --exclude='baseball/' \
-            --exclude='baseball_test/' \
-            ./ "${CORESERVER_SSH_USER}@${CORESERVER_SSH_HOST}:${DEPLOY_PATH}"
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.CORESERVER_FTP_SERVER }}
+          username: ${{ secrets.CORESERVER_FTP_USERNAME }}
+          password: ${{ secrets.CORESERVER_FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: ./
+          server-dir: ${{ secrets.CORESERVER_FTP_SERVER_DIR }}
+          dry-run: false
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .github/**
+            DEPLOY.md
+            README.md
+            HANDOVER.md
+            officialsite_handover.md
+            _spam_protection_readme.txt
+            _future_yakyu_yarouze_work_card_snippet.html
+            _restore_yakyu_yarouze_memo.txt
+            assets_manifest.json
+            **/*.zip
+            **/*.bak
+            **/*.tmp
+            desktop.ini
+            contact_guard/*.log
+            contact_guard/*.json
+            contact_guard/*.lock
+            baseball/**
+            baseball_test/**
 
       - name: Post deploy note
         if: ${{ github.event.inputs.apply == 'true' }}
