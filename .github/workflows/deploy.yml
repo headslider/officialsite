@@ -38,7 +38,10 @@ jobs:
           chmod 700 ~/.ssh
           printf '%s\n' "${CORESERVER_SSH_KEY}" > ~/.ssh/coreserver_deploy_key
           chmod 600 ~/.ssh/coreserver_deploy_key
-          ssh-keyscan -p "${CORESERVER_SSH_PORT:-22}" -H "${CORESERVER_SSH_HOST}" >> ~/.ssh/known_hosts
+          SSH_PORT="${CORESERVER_SSH_PORT:-22}"
+          touch ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          ssh-keyscan -T 10 -p "${SSH_PORT}" -H "${CORESERVER_SSH_HOST}" >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Dry-run deploy
         if: ${{ github.event.inputs.apply != 'true' }}
@@ -52,7 +55,7 @@ jobs:
           SSH_PORT="${CORESERVER_SSH_PORT:-22}"
           DEPLOY_PATH="${CORESERVER_DEPLOY_PATH:-/virtual/ref/public_html/www.realemotionfactory.com/}"
           rsync -azvn \
-            -e "ssh -i ~/.ssh/coreserver_deploy_key -p ${SSH_PORT} -o StrictHostKeyChecking=yes" \
+            -e "ssh -i ~/.ssh/coreserver_deploy_key -p ${SSH_PORT} -o StrictHostKeyChecking=accept-new" \
             --exclude='.git/' \
             --exclude='.github/' \
             --exclude='.gitignore' \
@@ -88,7 +91,7 @@ jobs:
           SSH_PORT="${CORESERVER_SSH_PORT:-22}"
           DEPLOY_PATH="${CORESERVER_DEPLOY_PATH:-/virtual/ref/public_html/www.realemotionfactory.com/}"
           rsync -azv \
-            -e "ssh -i ~/.ssh/coreserver_deploy_key -p ${SSH_PORT} -o StrictHostKeyChecking=yes" \
+            -e "ssh -i ~/.ssh/coreserver_deploy_key -p ${SSH_PORT} -o StrictHostKeyChecking=accept-new" \
             --exclude='.git/' \
             --exclude='.github/' \
             --exclude='.gitignore' \
